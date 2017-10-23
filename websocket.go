@@ -51,7 +51,7 @@ const tpl = `<html>
 
 func myHandler(w http.ResponseWriter, r *http.Request) { //创建一个方法来服务html文件
 	t := template.New("tpl")
-	tmp, err := t.Parse(tpl)
+	tmp, _ := t.Parse(tpl)
 	tmp.Execute(w, nil)
 }
 
@@ -68,7 +68,7 @@ func Echo(ws *websocket.Conn) {
 
 		fmt.Println("Received back from client: " + reply)
 
-		msg := "Received:  " + reply
+		msg := "Received:  " + reply + "But it's from Server yoyoyoyoyo!"
 		fmt.Println("Sending to client: " + msg)
 
 		if err = websocket.Message.Send(ws, msg); err != nil {
