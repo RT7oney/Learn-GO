@@ -8,6 +8,9 @@ import (
 	"os"
 )
 
+var network = "tcp"
+var address = "192.168.0.1:1234"
+
 type Args struct {
 	A, B int
 }
@@ -21,7 +24,7 @@ func main() { //这里面就是一个请求调用rpc的过程
 		fmt.Println("Usage:", os.Args[0], "server") //os.Args[0]第一个元素是程序本身
 		os.Exit(1)
 	}
-	severAddr := os.Args[1]
+	// severAddr := os.Args[1]
 	//接下来调用rpc服务，首先要获得一个client对象
 	//network走tcp因为http也是基于tcp
 	client, err := rpc.DialHTTP(network, address)

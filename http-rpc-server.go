@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/http" //如果是tcp则不用
+	// "net/http" //如果是tcp则不用
 	"net/rpc"
 	"os"
 )
@@ -46,12 +46,12 @@ func main() {
 	// 	fmt.Println(err.Error())
 	// }
 	/*************tcp*****************/
-	tcpAddr, err := net.ResolveTCPAddr("tpc", ":1234")
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":1234")
 	if err != nil {
 		fmt.Println("Fatal error:", err)
 		os.Exit(2)
 	}
-	Listener, err := net.ListenTCP("tcp", tcpAddr)
+	listener, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
 		fmt.Println("Fatal error:", err)
 		os.Exit(2)
