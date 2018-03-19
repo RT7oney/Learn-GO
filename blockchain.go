@@ -61,25 +61,25 @@ var Blockchain []Block
 维持链的完整性。通过存储前一个块的散列值，我们就能够确保每个块在链中的正确顺序。任何对数据的篡改都将改变散列值，同时也就破坏了链。以我们从事的医疗健康领域为例，比如有一个恶意的第三方为了调整“人寿险”的价格，而修改了一个或若干个块中的代表不健康的 BPM 值，那么整个链都变得不可信了。
 */
 func calculateHash(block Block) string {
-    record := string(block.Index) + block.Timestamp + string(block.BPM) + block.PrevHash
-    h := sha256.New()
-    h.Write([]byte(record))
-    hashed := h.Sum(nil)
-    return hex.EncodeToString(hashed)
+	record := string(block.Index) + block.Timestamp + string(block.BPM) + block.PrevHash
+	h := sha256.New()
+	h.Write([]byte(record))
+	hashed := h.Sum(nil)
+	return hex.EncodeToString(hashed)
 }
 
 /**
 这个 calculateHash 函数接受一个块，通过块中的 Index，Timestamp，BPM，以及 PrevHash 值来计算出 SHA256 散列值。接下来我们就能便携一个生成块的函数：
 */
 func generateBlock(oldBlock Block, BPM int) (Block, error) {
-    var newBlock Block
+	var newBlock Block
 
-    t := time.Now()
-    newBlock.Index = oldBlock.Index + 1
-    newBlock.Timestamp = t.String()
-    newBlock.BPM = BPM
-    newBlock.PrevHash = oldBlock.Hash
-    newBlock.Hash = calculateHash(newBlock)
+	t := time.Now()
+	newBlock.Index = oldBlock.Index + 1
+	newBlock.Timestamp = t.String()
+	newBlock.BPM = BPM
+	newBlock.PrevHash = oldBlock.Hash
+	newBlock.Hash = calculateHash(newBlock)
 
 	return newBlock, nil
 	/**
@@ -91,23 +91,60 @@ func generateBlock(oldBlock Block, BPM int) (Block, error) {
 搞定了块的生成，接下来我们需要有函数帮我们判断一个块是否有被篡改。检查 Index 来看这个块是否正确得递增，检查 PrevHash 与前一个块的 Hash 是否一致，再来通过 calculateHash 检查当前块的 Hash 值是否正确。通过这几步我们就能写出一个校验函数
 */
 func isBlockValid(newBlock, oldBlock Block) bool {
-    if oldBlock.Index+1 != newBlock.Index {
-        return false
-    }
-    if oldBlock.Hash != newBlock.PrevHash {
-        return false
-    }
-    if calculateHash(newBlock) != newBlock.Hash {
-        return false
-    }
-    return true
+	if oldBlock.Index+1 != newBlock.Index {
+		return false
+	}
+	if oldBlock.Hash != newBlock.PrevHash {
+		return false
+	}
+	if calculateHash(newBlock) != newBlock.Hash {
+		return false
+	}
+	return true
 }
 
 /**
 除了校验块以外，我们还会遇到一个问题：两个节点都生成块并添加到各自的链上，那我们应该以谁为准？这里的细节我们留到下一篇文章，这里先让我们记住一个原则：始终选择最长的链。
 */
 func replaceChain(newBlocks []Block) {
-    if len(newBlocks) > len(Blockchain) {
-        Blockchain = newBlocks
-    }
+	if len(newBlocks) > len(Blockchain) {
+		Blockchain = newBlocks
+	}
+}
+
+/****************************传统的web服务来查看整个区块链******************************/
+
+func run() error {
+	mux := makeMuxRouter()
+	httpAddr := os.Getenv("ADDR")
+	log.Println("Listening on ", os.Getenv("ADDR"))
+	s := &http.Server{
+		Addr:           ":" + httpAddr,
+		Handler:        mux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	if err := s.ListenAndServe(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func makeMuxRouter() http.Handler {
+	muxRouter := mux.NewRouter()
+	muxRouter.HandleFunc("/", handleGetBlockchain).Methods("GET")
+	muxRouter.HandleFunc("/", handleWriteBlock).Methods("POST")
+	return muxRouter
+}
+
+func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
+	bytes, err := json.MarshalIndent(Blockchain, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w, string(bytes))
 }
