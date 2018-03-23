@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"log"
 	"crypto/tls"
+	"bufio"
 )
 func HelloServer(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, "hello, world!\n")
@@ -21,12 +22,14 @@ func main() {
 // tls server
 
 package main
+
 import (
-"log"
-"crypto/tls"
-"net"
-"bufio"
+	"log"
+	"crypto/tls"
+	"net"
+	"bufio"
 )
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 	cer, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
@@ -71,10 +74,12 @@ func handleConnection(conn net.Conn) {
 //tls client
 
 package main
+
 import (
-"log"
-"crypto/tls"
+	"log"
+	"crypto/tls"
 )
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 	conf := &tls.Config{
